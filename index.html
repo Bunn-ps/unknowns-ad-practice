@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unknowns A–D Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a lab worksheet — well plate and observation grid on the left, answer bench on the right; blue "worksheet ink" accent, red for hints. */
+:root{
+  --paper:#f3f5f8; --surface:#ffffff; --ink:#16202b; --muted:#5a6775; --rule:#d4dbe3;
+  --accent:#1f5fbf; --accent-soft:#e4ecfa; --hint:#c0392b;
+  --good:#1d7a46; --good-soft:#e2f3e9; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --well-bg:#e8edf2; --well-ring:#b9c3cd; --blocked:#8a949e;
+  --font-display:"Newsreader", Georgia, "Times New Roman", serif;
+  --font-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f141a; --surface:#17202a; --ink:#e6edf3; --muted:#97a5b4; --rule:#2b3746;
+    --accent:#7ea9ff; --accent-soft:#1b2a42; --hint:#ff7f6e;
+    --good:#52c78e; --good-soft:#13301f; --bad:#ff7b72; --bad-soft:#3a1716;
+    --well-bg:#202b37; --well-ring:#3c4a5a; --blocked:#4a5562;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0f141a; --surface:#17202a; --ink:#e6edf3; --muted:#97a5b4; --rule:#2b3746;
+  --accent:#7ea9ff; --accent-soft:#1b2a42; --hint:#ff7f6e;
+  --good:#52c78e; --good-soft:#13301f; --bad:#ff7b72; --bad-soft:#3a1716;
+  --well-bg:#202b37; --well-ring:#3c4a5a; --blocked:#4a5562;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid var(--rule);padding-bottom:14px}
+h1{font-family:var(--font-display);font-weight:600;font-size:30px;line-height:1.15;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{font:500 14px var(--font-body);color:var(--muted);text-decoration:none;padding:7px 12px;border-radius:7px;border:1px solid transparent}
+nav a:hover{color:var(--ink);background:var(--surface)}
+nav a[aria-current="page"]{color:var(--accent);background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+a:focus-visible,button:focus-visible,select:focus-visible,.cell:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.view{display:none;margin-top:22px}
+.view.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px}
+h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 10px;text-wrap:balance}
+h3{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.toolbar .spacer{flex:1}
+button{font:500 14px var(--font-body);border-radius:7px;padding:8px 14px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+button.primary:hover{filter:brightness(1.08)}
+button.ghost{background:transparent}
+label.toggle{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);cursor:pointer}
+.pill{display:inline-block;font:500 12px var(--font-body);padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+
+/* Worksheet: plate + table */
+.sheet{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:640px){.sheet{grid-template-columns:1fr}}
+.plate{display:grid;grid-template-columns:22px repeat(3,64px);grid-template-rows:22px repeat(3,64px);gap:8px;padding:12px;background:color-mix(in srgb,var(--well-bg) 60%,var(--surface));border:1px solid var(--rule);border-radius:12px;justify-content:center}
+.lbl{display:flex;align-items:center;justify-content:center;font:600 14px var(--font-body);color:var(--muted)}
+.well{position:relative;width:64px;height:64px;border-radius:50%;background:var(--well-bg);border:3px solid var(--well-ring);box-shadow:inset 0 2px 6px rgba(0,0,0,.12);overflow:hidden}
+.well.blocked{background:transparent;border-style:dashed;border-color:var(--rule);box-shadow:none}
+.well.blocked::before,.well.blocked::after{content:"";position:absolute;left:50%;top:50%;width:70%;height:9px;background:var(--blocked);border-radius:3px;transform:translate(-50%,-50%) rotate(45deg)}
+.well.blocked::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.w-white{background:radial-gradient(circle at 45% 40%,#ffffff 0%,#f1f1ec 60%,#dcdcd5 100%)}
+.w-cream{background:radial-gradient(circle at 45% 40%,#f7f5d8 0%,#e7eab3 65%,#cfd394 100%)}
+.w-brown{background:radial-gradient(circle at 45% 40%,#8a5a33 0%,#5f3b1e 70%,#43290f 100%)}
+.w-slow::after{content:"";position:absolute;inset:6px 10px auto;height:22px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(255,255,255,.95),rgba(255,255,255,.35) 60%,transparent 75%)}
+.w-slow{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,#ffffff 40%,var(--well-bg)) 0%,var(--well-bg) 60%)}
+.w-nh3 svg{position:absolute;inset:0;width:100%;height:100%}
+.well .q{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 18px var(--font-body);color:var(--muted)}
+
+.obs-table{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+.obs-table th{font:600 14px var(--font-body);color:var(--muted);padding:4px}
+.obs-table th.row{width:28px}
+.obs-table td{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:10px 8px;text-align:center;color:var(--accent);font-size:14px;line-height:1.35;height:76px;vertical-align:middle}
+.obs-table td.blocked{background:var(--blocked);border-color:var(--blocked)}
+.obs-table td.lit{outline:2px solid var(--hint);outline-offset:1px}
+.hintline{color:var(--hint);font-weight:600;margin:12px 0 0;font-size:14px}
+
+.answers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+@media (max-width:520px){.answers{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ans{display:flex;flex-direction:column;gap:4px}
+.ans label{font:600 13px var(--font-body);color:var(--muted)}
+select{font:500 15px var(--font-body);padding:8px 10px;border-radius:7px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);width:100%}
+select.ok{border-color:var(--good);background:var(--good-soft)}
+select.no{border-color:var(--bad);background:var(--bad-soft)}
+.mark{font-size:13px;min-height:18px}
+.mark.ok{color:var(--good)} .mark.no{color:var(--bad)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.msg{margin-top:12px;font-size:14px;min-height:1px}
+.msg.warn{color:var(--hint)}
+.banner{border-radius:8px;padding:10px 12px;font-weight:600;margin-top:14px}
+.banner.ok{background:var(--good-soft);color:var(--good)}
+.banner.no{background:var(--bad-soft);color:var(--bad)}
+
+.solution{margin-top:16px;border-top:1px solid var(--rule);padding-top:14px}
+.sol-row{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px dashed var(--rule)}
+.sol-row:last-child{border-bottom:none}
+.sol-pair{font:600 14px var(--font-body)}
+.sol-obs{font-weight:500}
+.eq{font-family:var(--font-mono);font-size:13.5px;color:var(--ink);background:var(--paper);border-radius:5px;padding:3px 7px;display:inline-block;margin:4px 0;overflow-x:auto;max-width:100%}
+.note{color:var(--muted);font-size:14px}
+.clue{margin-top:12px;padding:10px 12px;border-left:3px solid var(--hint);background:color-mix(in srgb,var(--hint) 8%,var(--surface));border-radius:0 6px 6px 0;font-size:14px}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--paper);border-radius:8px;padding:10px}
+.stat b{display:block;font:600 22px var(--font-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+ol.tips{padding-left:20px;margin:0;font-size:14px}
+ol.tips li{margin-bottom:8px}
+.aside-stack{display:flex;flex-direction:column;gap:16px}
+
+/* Reaction table */
+.rt-wrap{overflow-x:auto}
+.rt{border-collapse:separate;border-spacing:4px;min-width:640px;width:100%}
+.rt th{font:600 13px var(--font-body);color:var(--muted);padding:4px;white-space:nowrap}
+.rt th.rowh{text-align:right}
+.cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:7px;border:1px solid var(--rule);background:var(--paper);cursor:pointer;min-height:84px;justify-content:center;width:100%;font:inherit;color:inherit}
+.cell:hover{border-color:var(--accent)}
+.cell.sel{border-color:var(--accent);background:var(--accent-soft)}
+.cell .well{width:34px;height:34px;border-width:2px}
+.cell small{font-size:11.5px;line-height:1.25;color:var(--muted);text-align:center}
+td.diag{background:transparent}
+.detail{margin-top:14px}
+
+/* Predict drill */
+.drill-pair{display:flex;flex-wrap:wrap;align-items:center;gap:14px;font:600 26px var(--font-display);margin:6px 0 16px}
+.drill-pair .plus{color:var(--muted);font-weight:500}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.choice{display:flex;align-items:center;gap:10px;text-align:left;padding:10px}
+.choice .well{width:30px;height:30px;border-width:2px;flex:none}
+.choice.ok{border-color:var(--good);background:var(--good-soft)}
+.choice.no{border-color:var(--bad);background:var(--bad-soft)}
+footer{margin-top:28px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion: no-preference){
+  .well{transition:background .25s ease}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Unknowns A–D Practice</h1>
+      <p class="sub">2302103 General Chemistry Lab · AgNO₃, KBr, Na₂SO₄, KIO₃, NaOH, NH₄Cl, BaCl₂</p>
+    </div>
+    <nav aria-label="Sections">
+      <a href="#practise" data-view="practise">Practise puzzles</a>
+      <a href="#predict" data-view="predict">Predict the result</a>
+      <a href="#table" data-view="table">Reaction table</a>
+    </nav>
+  </header>
+
+  <!-- PRACTISE -->
+  <section class="view" id="view-practise">
+    <div class="grid">
+      <div class="card">
+        <div class="toolbar">
+          <button class="primary" id="btn-new">New puzzle</button>
+          <button id="btn-q1">Worksheet Q1</button>
+          <button id="btn-q2">Worksheet Q2</button>
+          <span class="spacer"></span>
+          <label class="toggle"><input type="checkbox" id="hard"> Hard mode (no hints)</label>
+        </div>
+        <p class="note" id="puzzle-title" style="margin:0 0 12px"></p>
+        <div class="sheet">
+          <div class="plate" id="plate" aria-label="Well plate"></div>
+          <div>
+            <table class="obs-table" id="obs-table" aria-label="Observations"></table>
+          </div>
+        </div>
+        <p class="hintline" id="hintline" hidden></p>
+
+        <div class="answers" id="answers"></div>
+        <div class="actions">
+          <button class="primary" id="btn-check">Check answers</button>
+          <button id="btn-nudge">Give me a clue</button>
+          <button class="ghost" id="btn-reveal">Show solution</button>
+        </div>
+        <div class="msg" id="msg"></div>
+        <div id="clue"></div>
+        <div id="result"></div>
+      </div>
+
+      <div class="aside-stack">
+        <div class="card">
+          <h3>Your score</h3>
+          <div class="stats">
+            <div class="stat"><b id="s-solved">0</b><span>solved</span></div>
+            <div class="stat"><b id="s-att">0</b><span>attempted</span></div>
+            <div class="stat"><b id="s-streak">0</b><span>current streak</span></div>
+            <div class="stat"><b id="s-best">0</b><span>best streak</span></div>
+          </div>
+          <div class="actions"><button class="ghost" id="btn-reset">Reset score</button></div>
+        </div>
+        <div class="card">
+          <h3>Method</h3>
+          <ol class="tips">
+            <li>Start with the one-of-a-kind results: <b>ammonia</b> = NH₄Cl + NaOH, <b>brown</b> = AgNO₃ + NaOH, <b>cream</b> = AgNO₃ + KBr.</li>
+            <li>AgNO₃ reacts with all six others. An unknown with any “No change” cannot be AgNO₃.</li>
+            <li>A white precipitate needs Ag⁺ or Ba²⁺ in one of the pair.</li>
+            <li>A <i>little</i> white precipitate forming slowly is sparingly soluble Ag₂SO₄.</li>
+            <li>Before committing, test your full assignment against every cell, including the “No change” ones.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREDICT -->
+  <section class="view" id="view-predict">
+    <div class="grid">
+      <div class="card">
+        <h2>What do you see when you mix…</h2>
+        <div class="drill-pair" id="drill-pair"></div>
+        <div class="choices" id="choices"></div>
+        <div id="drill-feedback"></div>
+        <div class="actions"><button class="primary" id="btn-next">Next pair</button></div>
+      </div>
+      <div class="aside-stack">
+        <div class="card">
+          <h3>Drill score</h3>
+          <div class="stats">
+            <div class="stat"><b id="d-right">0</b><span>correct</span></div>
+            <div class="stat"><b id="d-total">0</b><span>answered</span></div>
+            <div class="stat"><b id="d-streak">0</b><span>current streak</span></div>
+            <div class="stat"><b id="d-best">0</b><span>best streak</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Why drill this</h3>
+          <p class="note" style="margin:0">Every puzzle comes down to these 21 pairs. Once you can predict each one instantly, the A–D grids become elimination exercises.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABLE -->
+  <section class="view" id="view-table">
+    <div class="card">
+      <div class="toolbar">
+        <h2 style="margin:0">All 21 pairings</h2>
+        <span class="spacer"></span>
+        <label class="toggle"><input type="checkbox" id="hide-rt"> Hide results (click a cell to reveal)</label>
+      </div>
+      <div class="rt-wrap"><table class="rt" id="rt"></table></div>
+      <div class="detail" id="rt-detail"><p class="note">Select a cell to see the ionic equation and what to look for.</p></div>
+    </div>
+  </section>
+
+  <footer>Observations follow the lab worksheet’s descriptions. Ionic equations include state symbols.</footer>
+</div>
+
+<script>
+(function(){
+const R=['AgNO3','KBr','Na2SO4','KIO3','NaOH','NH4Cl','BaCl2'];
+const NAME={AgNO3:'AgNO₃',KBr:'KBr',Na2SO4:'Na₂SO₄',KIO3:'KIO₃',NaOH:'NaOH',NH4Cl:'NH₄Cl',BaCl2:'BaCl₂'};
+const ION={AgNO3:'Ag⁺',KBr:'Br⁻',Na2SO4:'SO₄²⁻',KIO3:'IO₃⁻',NaOH:'OH⁻',NH4Cl:'NH₄⁺',BaCl2:'Ba²⁺'};
+const OBS={none:'No change',white:'White precipitate',slow:'Little white precipitate, forms slowly',cream:'Cream (pale yellow) precipitate',brown:'Brown precipitate',nh3:'Smell of ammonia gas'};
+const OBS_ORDER=['none','white','slow','cream','brown','nh3'];
+const LETTERS=['A','B','C','D'];
+const PAIRS=[[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+const RX={
+ 'AgNO3|KBr':{o:'cream',eq:'Ag⁺(aq) + Br⁻(aq) → AgBr(s)',note:'Silver bromide is cream (pale yellow). It is the only coloured silver halide in this set, so a cream precipitate pins down both AgNO₃ and KBr.'},
+ 'AgNO3|Na2SO4':{o:'slow',eq:'2Ag⁺(aq) + SO₄²⁻(aq) → Ag₂SO₄(s)',note:'Silver sulfate is only sparingly soluble (K<sub>sp</sub> ≈ 1.2 × 10⁻⁵). The ionic product only just exceeds K<sub>sp</sub>, so a little precipitate forms slowly, often at the surface.'},
+ 'AgNO3|KIO3':{o:'white',eq:'Ag⁺(aq) + IO₃⁻(aq) → AgIO₃(s)',note:'Silver iodate is white and looks just like AgCl. This is why worksheets add a hint ruling out IO₃⁻.'},
+ 'AgNO3|NaOH':{o:'brown',eq:'2Ag⁺(aq) + 2OH⁻(aq) → Ag₂O(s) + H₂O(l)',note:'AgOH is unstable and loses water to give brown silver(I) oxide. Brown is the giveaway for Ag⁺ + OH⁻.'},
+ 'AgNO3|NH4Cl':{o:'white',eq:'Ag⁺(aq) + Cl⁻(aq) → AgCl(s)',note:'White silver chloride. It dissolves in dilute NH₃(aq), unlike AgBr.'},
+ 'AgNO3|BaCl2':{o:'white',eq:'Ag⁺(aq) + Cl⁻(aq) → AgCl(s)',note:'The Cl⁻ from BaCl₂ precipitates white AgCl; Ba²⁺ and NO₃⁻ stay in solution as spectator ions.'},
+ 'Na2SO4|BaCl2':{o:'white',eq:'Ba²⁺(aq) + SO₄²⁻(aq) → BaSO₄(s)',note:'Dense white barium sulfate, insoluble even in dilute acid. This is the standard test for sulfate.'},
+ 'KIO3|BaCl2':{o:'white',eq:'Ba²⁺(aq) + 2IO₃⁻(aq) → Ba(IO₃)₂(s)',note:'Barium iodate is sparingly soluble (K<sub>sp</sub> of order 10⁻⁹), so a white precipitate forms.'},
+ 'NaOH|BaCl2':{o:'white',eq:'Ba²⁺(aq) + 2OH⁻(aq) → Ba(OH)₂(s)',note:'Ba(OH)₂ is only moderately soluble. NaOH(aq) that has absorbed CO₂ from the air also gives white BaCO₃: Ba²⁺(aq) + CO₃²⁻(aq) → BaCO₃(s). Either way the precipitate is white, never brown.'},
+ 'NaOH|NH4Cl':{o:'nh3',eq:'NH₄⁺(aq) + OH⁻(aq) → NH₃(g) + H₂O(l)',note:'Pungent ammonia gas, which turns damp red litmus paper blue. Warming speeds it up. Only NH₄⁺ + OH⁻ gives this.'},
+ 'KBr|KIO3':{o:'none',eq:'No reaction in neutral solution',note:'IO₃⁻ only oxidises Br⁻ in acidic solution, so mixing the neutral solutions shows no change.'}
+};
+const NONE={o:'none',eq:'No reaction',note:'Every possible combination of ions stays in solution, so nothing visible happens.'};
+const CLUE={
+ nh3:'Ammonia gas only comes from NH₄⁺ + OH⁻, so this pair is NH₄Cl and NaOH (in some order).',
+ brown:'A brown precipitate is Ag₂O, so this pair is AgNO₃ and NaOH (in some order).',
+ cream:'A cream precipitate is AgBr, so this pair is AgNO₃ and KBr (in some order).',
+ slow:'A little white precipitate forming slowly suggests sparingly soluble Ag₂SO₄: AgNO₃ and Na₂SO₄.',
+ white:'A white precipitate needs Ag⁺ (AgCl, AgIO₃) or Ba²⁺ (BaSO₄, Ba(IO₃)₂, Ba(OH)₂/BaCO₃). One of this pair is AgNO₃ or BaCl₂.',
+ none:'“No change” rules out every pair that would react. AgNO₃ reacts with all six others, so neither of these is AgNO₃.'
+};
+const PRIORITY=['nh3','brown','cream','slow','white','none'];
+
+function key(a,b){return R.indexOf(a)<R.indexOf(b)?a+'|'+b:b+'|'+a}
+function rx(a,b){return RX[key(a,b)]||NONE}
+function obsOf(asg){return PAIRS.map(([i,j])=>rx(asg[i],asg[j]).o)}
+
+const PERMS=[];
+for(const a of R)for(const b of R)for(const c of R)for(const d of R){
+  const s=new Set([a,b,c,d]); if(s.size===4)PERMS.push([a,b,c,d]);
+}
+function sols(obs,excl){
+  return PERMS.filter(p=>(!excl||!p.includes(excl))&&obsOf(p).every((o,k)=>o===obs[k]));
+}
+function same(a,b){return a.every((x,i)=>x===b[i])}
+
+/* storage (per-viewer convenience only) */
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+/* ---------- wells ---------- */
+const VAPOUR='<svg viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".8"><path d="M20 46c-4-5 4-8 0-13s4-8 0-13"/><path d="M32 48c-4-5 4-8 0-13s4-8 0-13"/><path d="M44 46c-4-5 4-8 0-13s4-8 0-13"/></g></svg>';
+function wellHTML(o,label){
+  const inner=o==='nh3'?VAPOUR:'';
+  const style=o==='nh3'?' style="color:var(--accent)"':'';
+  return '<div class="well w-'+o+'"'+style+' role="img" aria-label="'+(label||OBS[o])+'">'+inner+'</div>';
+}
+
+/* ---------- practise ---------- */
+const PRESETS={
+  q1:{title:'Worksheet Q1 (as set, with no hint)',answer:['Na2SO4','AgNO3','NH4Cl','KBr'],hint:null},
+  q2:{title:'Worksheet Q2',answer:['BaCl2','Na2SO4','NH4Cl','NaOH'],hint:'KIO3'}
+};
+let P=null, revealed=false, attempted=false, clueIdx=0;
+let score=load('ud-score',{solved:0,att:0,streak:0,best:0});
+
+function genPuzzle(hard){
+  for(let t=0;t<4000;t++){
+    const ans=PERMS[Math.floor(Math.random()*PERMS.length)];
+    const obs=obsOf(ans);
+    if(obs.filter(o=>o!=='none').length<2)continue;
+    const all=sols(obs);
+    if(all.length===1)return {title:'Random puzzle',answer:ans,obs,hint:null};
+    if(hard)continue;
+    const cands=R.filter(r=>!ans.includes(r)&&all.every(s=>same(s,ans)||s.includes(r)));
+    if(cands.length){
+      const h=cands[Math.floor(Math.random()*cands.length)];
+      return {title:'Random puzzle',answer:ans,obs,hint:h};
+    }
+  }
+  return {title:'Random puzzle',answer:PRESETS.q2.answer,obs:obsOf(PRESETS.q2.answer),hint:'KIO3'};
+}
+function usePreset(id){const p=PRESETS[id];startPuzzle({title:p.title,answer:p.answer,obs:obsOf(p.answer),hint:p.hint})}
+
+function startPuzzle(p){
+  P=p; revealed=false; attempted=false; clueIdx=0;
+  document.getElementById('puzzle-title').innerHTML='<span class="pill">'+p.title+'</span> Identify A, B, C and D from the results.';
+  renderPlate(); renderObsTable();
+  const hl=document.getElementById('hintline');
+  if(p.hint){hl.hidden=false;hl.textContent='Hint: there was no “'+ION[p.hint]+'” ion ('+NAME[p.hint]+') in these 4 samples.'}
+  else hl.hidden=true;
+  renderAnswers();
+  setMsg('');
+  document.getElementById('clue').innerHTML='';
+  document.getElementById('result').innerHTML='';
+}
+function renderPlate(){
+  const el=document.getElementById('plate'); let h='<div></div>';
+  ['B','C','D'].forEach(c=>h+='<div class="lbl">'+c+'</div>');
+  for(let r=0;r<3;r++){
+    h+='<div class="lbl">'+LETTERS[r]+'</div>';
+    for(let c=1;c<4;c++){
+      if(c<=r){h+='<div class="well blocked" aria-hidden="true"></div>';continue}
+      const k=PAIRS.findIndex(([i,j])=>i===r&&j===c);
+      h+=wellHTML(P.obs[k],LETTERS[r]+' + '+LETTERS[c]+': '+OBS[P.obs[k]]);
+    }
+  }
+  el.innerHTML=h;
+}
+function renderObsTable(lit){
+  const el=document.getElementById('obs-table');
+  let h='<tr><th class="row"></th><th>B</th><th>C</th><th>D</th></tr>';
+  for(let r=0;r<3;r++){
+    h+='<tr><th class="row">'+LETTERS[r]+'</th>';
+    for(let c=1;c<4;c++){
+      if(c<=r){h+='<td class="blocked" aria-hidden="true"></td>';continue}
+      const k=PAIRS.findIndex(([i,j])=>i===r&&j===c);
+      h+='<td'+(lit===k?' class="lit"':'')+'>'+OBS[P.obs[k]]+'</td>';
+    }
+    h+='</tr>';
+  }
+  el.innerHTML=h;
+}
+function renderAnswers(){
+  const el=document.getElementById('answers');
+  el.innerHTML=LETTERS.map((L,i)=>'<div class="ans"><label for="ans-'+L+'">What is '+L+'?</label><select id="ans-'+L+'"><option value="">Choose…</option>'+R.map(r=>'<option value="'+r+'">'+NAME[r]+'</option>').join('')+'</select><div class="mark" id="mark-'+L+'"></div></div>').join('');
+  LETTERS.forEach(L=>document.getElementById('ans-'+L).addEventListener('change',()=>{
+    const s=document.getElementById('ans-'+L); s.classList.remove('ok','no'); document.getElementById('mark-'+L).textContent='';
+  }));
+}
+function setMsg(t,warn){const m=document.getElementById('msg');m.textContent=t;m.className='msg'+(warn?' warn':'')}
+function picks(){return LETTERS.map(L=>document.getElementById('ans-'+L).value)}
+
+function check(){
+  if(revealed){setMsg('Solution already shown. Start a new puzzle to score again.',true);return}
+  const p=picks();
+  if(p.some(x=>!x)){setMsg('Choose a reagent for all four unknowns first.',true);return}
+  if(new Set(p).size<4){setMsg('Each unknown is a different reagent. Two of your choices are the same.',true);return}
+  setMsg('');
+  let right=0;
+  p.forEach((x,i)=>{
+    const ok=x===P.answer[i], L=LETTERS[i];
+    const s=document.getElementById('ans-'+L); s.classList.remove('ok','no'); s.classList.add(ok?'ok':'no');
+    document.getElementById('mark-'+L).className='mark '+(ok?'ok':'no');
+    document.getElementById('mark-'+L).textContent=ok?'✓ Correct':'✗ Not this one';
+    if(ok)right++;
+  });
+  if(!attempted){score.att++;attempted=true}
+  const all=right===4;
+  if(all){score.solved++;score.streak++;score.best=Math.max(score.best,score.streak)}
+  else score.streak=0;
+  save('ud-score',score); renderScore();
+
+  // does the user's assignment at least fit the evidence?
+  const fits=same(obsOf(p),P.obs)&&(!P.hint||!p.includes(P.hint));
+  let h='';
+  if(all)h+='<div class="banner ok">All four correct. '+(P.hint?'':'')+'</div>';
+  else if(fits)h+='<div class="banner no">'+right+'/4. Your set fits every observation, but it isn’t the intended answer. See the note under the solution.</div>';
+  else{
+    const bad=PAIRS.map(([i,j],k)=>({i,j,k,o:rx(p[i],p[j]).o})).filter(x=>x.o!==P.obs[x.k]);
+    h+='<div class="banner no">'+right+'/4. Your choices clash with the results here:</div><ul class="note">'+bad.map(x=>'<li>'+LETTERS[x.i]+' + '+LETTERS[x.j]+': '+NAME[p[x.i]]+' + '+NAME[p[x.j]]+' would give <b>'+OBS[x.o].toLowerCase()+'</b>, but the table shows <b>'+OBS[P.obs[x.k]].toLowerCase()+'</b>.</li>').join('')+'</ul>';
+    if(P.hint&&p.includes(P.hint))h+='<p class="note">The hint rules out '+NAME[P.hint]+'.</p>';
+    h+='<p class="note">Fix those and check again, or ask for a clue.</p>';
+  }
+  if(all)h+=solutionHTML();
+  document.getElementById('result').innerHTML=h;
+}
+function solutionHTML(){
+  const a=P.answer;
+  let h='<div class="solution"><h2>Worked solution</h2><p class="note" style="margin-top:0">A = '+NAME[a[0]]+', B = '+NAME[a[1]]+', C = '+NAME[a[2]]+', D = '+NAME[a[3]]+'</p>';
+  PAIRS.forEach(([i,j],k)=>{
+    const x=rx(a[i],a[j]);
+    h+='<div class="sol-row"><div class="sol-pair">'+LETTERS[i]+' + '+LETTERS[j]+'</div><div><div class="sol-obs">'+OBS[x.o]+' · '+NAME[a[i]]+' + '+NAME[a[j]]+'</div><span class="eq">'+x.eq+'</span><div class="note">'+x.note+'</div></div></div>';
+  });
+  const alts=sols(P.obs,P.hint).filter(s=>!same(s,a));
+  if(alts.length){
+    h+='<div class="clue"><b>Note:</b> these results alone also fit '+alts.map(s=>s.map((r,i)=>LETTERS[i]+' = '+NAME[r]).join(', ')).join('; or ')+'. The intended answer uses the more familiar test. AgCl is the standard white precipitate with Ag⁺; AgIO₃ looks identical, which is why later questions add a hint ruling out IO₃⁻.</div>';
+  }else if(P.hint){
+    const without=sols(P.obs).filter(s=>!same(s,a));
+    if(without.length)h+='<p class="note">Without the hint, '+without.length+' other assignment'+(without.length>1?'s':'')+' would also fit. Each one uses '+NAME[P.hint]+'.</p>';
+  }
+  return h+'</div>';
+}
+function reveal(){
+  revealed=true;
+  P.answer.forEach((r,i)=>{const s=document.getElementById('ans-'+LETTERS[i]);s.value=r;s.classList.remove('no');s.classList.add('ok');document.getElementById('mark-'+LETTERS[i]).textContent=''});
+  if(!attempted){score.att++;attempted=true}
+  score.streak=0; save('ud-score',score); renderScore();
+  setMsg('');
+  document.getElementById('result').innerHTML=solutionHTML();
+}
+function nudge(){
+  const ranked=PAIRS.map((pr,k)=>k).sort((x,y)=>PRIORITY.indexOf(P.obs[x])-PRIORITY.indexOf(P.obs[y]));
+  const k=ranked[clueIdx%ranked.length]; clueIdx++;
+  const [i,j]=PAIRS[k];
+  renderObsTable(k);
+  document.getElementById('clue').innerHTML='<div class="clue"><b>Clue '+clueIdx+' · '+LETTERS[i]+' + '+LETTERS[j]+' ('+OBS[P.obs[k]].toLowerCase()+'):</b> '+CLUE[P.obs[k]]+'</div>';
+}
+function renderScore(){
+  document.getElementById('s-solved').textContent=score.solved;
+  document.getElementById('s-att').textContent=score.att;
+  document.getElementById('s-streak').textContent=score.streak;
+  document.getElementById('s-best').textContent=score.best;
+}
+
+/* ---------- predict drill ---------- */
+const ALLPAIRS=[]; for(let i=0;i<R.length;i++)for(let j=i+1;j<R.length;j++)ALLPAIRS.push([R[i],R[j]]);
+let D=null, dAnswered=false, dscore=load('ud-drill',{right:0,total:0,streak:0,best:0});
+function nextDrill(){
+  let pr; do{pr=ALLPAIRS[Math.floor(Math.random()*ALLPAIRS.length)]}while(D&&pr[0]===D[0]&&pr[1]===D[1]);
+  if(Math.random()<.5)pr=[pr[1],pr[0]];
+  D=pr; dAnswered=false;
+  document.getElementById('drill-pair').innerHTML='<span>'+NAME[pr[0]]+'(aq)</span><span class="plus">+</span><span>'+NAME[pr[1]]+'(aq)</span>';
+  document.getElementById('choices').innerHTML=OBS_ORDER.map(o=>'<button class="choice" data-o="'+o+'">'+wellHTML(o)+'<span>'+OBS[o]+'</span></button>').join('');
+  document.getElementById('drill-feedback').innerHTML='';
+  document.querySelectorAll('.choice').forEach(b=>b.addEventListener('click',()=>answerDrill(b.dataset.o)));
+}
+function answerDrill(o){
+  if(dAnswered)return; dAnswered=true;
+  const x=rx(D[0],D[1]), ok=o===x.o;
+  dscore.total++; if(ok){dscore.right++;dscore.streak++;dscore.best=Math.max(dscore.best,dscore.streak)}else dscore.streak=0;
+  save('ud-drill',dscore); renderDrillScore();
+  document.querySelectorAll('.choice').forEach(b=>{
+    if(b.dataset.o===x.o)b.classList.add('ok'); else if(b.dataset.o===o)b.classList.add('no');
+  });
+  document.getElementById('drill-feedback').innerHTML='<div class="banner '+(ok?'ok':'no')+'">'+(ok?'Correct: ':'Not quite. It’s ')+OBS[x.o].toLowerCase()+'.</div><p><span class="eq">'+x.eq+'</span></p><p class="note">'+x.note+'</p>';
+}
+function renderDrillScore(){
+  document.getElementById('d-right').textContent=dscore.right;
+  document.getElementById('d-total').textContent=dscore.total;
+  document.getElementById('d-streak').textContent=dscore.streak;
+  document.getElementById('d-best').textContent=dscore.best;
+}
+
+/* ---------- reaction table ---------- */
+const shown=new Set(); let selKey=null;
+function renderRT(){
+  const hide=document.getElementById('hide-rt').checked;
+  let h='<tr><th></th>'+R.map(r=>'<th>'+NAME[r]+'</th>').join('')+'</tr>';
+  R.forEach((a,i)=>{
+    h+='<tr><th class="rowh">'+NAME[a]+'</th>';
+    R.forEach((b,j)=>{
+      if(i===j){h+='<td class="diag"></td>';return}
+      const k=key(a,b), x=rx(a,b), vis=!hide||shown.has(k);
+      h+='<td><button class="cell'+(selKey===k?' sel':'')+'" data-k="'+k+'" aria-label="'+NAME[a]+' with '+NAME[b]+'">'+
+        (vis?wellHTML(x.o)+'<small>'+OBS[x.o]+'</small>':'<div class="well"><span class="q">?</span></div><small>Click to reveal</small>')+'</button></td>';
+    });
+    h+='</tr>';
+  });
+  document.getElementById('rt').innerHTML=h;
+  document.querySelectorAll('#rt .cell').forEach(c=>c.addEventListener('click',()=>{
+    selKey=c.dataset.k; shown.add(selKey); renderRT(); showDetail(selKey);
+  }));
+}
+function showDetail(k){
+  const [a,b]=k.split('|'), x=rx(a,b);
+  document.getElementById('rt-detail').innerHTML='<h2>'+NAME[a]+' + '+NAME[b]+'</h2><div style="display:flex;gap:12px;align-items:center">'+wellHTML(x.o)+'<b>'+OBS[x.o]+'</b></div><p><span class="eq">'+x.eq+'</span></p><p class="note" style="max-width:65ch">'+x.note+'</p>';
+}
+
+/* ---------- routing ---------- */
+const VIEWS=['practise','predict','table'];
+function route(){
+  const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):'practise';
+  VIEWS.forEach(n=>document.getElementById('view-'+n).classList.toggle('on',n===v));
+  document.querySelectorAll('nav a').forEach(a=>{if(a.dataset.view===v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+}
+window.addEventListener('hashchange',route);
+
+document.getElementById('btn-new').addEventListener('click',()=>startPuzzle(genPuzzle(document.getElementById('hard').checked)));
+document.getElementById('btn-q1').addEventListener('click',()=>usePreset('q1'));
+document.getElementById('btn-q2').addEventListener('click',()=>usePreset('q2'));
+document.getElementById('btn-check').addEventListener('click',check);
+document.getElementById('btn-reveal').addEventListener('click',reveal);
+document.getElementById('btn-nudge').addEventListener('click',nudge);
+document.getElementById('btn-reset').addEventListener('click',()=>{score={solved:0,att:0,streak:0,best:0};save('ud-score',score);renderScore()});
+document.getElementById('btn-next').addEventListener('click',nextDrill);
+document.getElementById('hide-rt').addEventListener('change',()=>{shown.clear();renderRT()});
+
+route();
+startPuzzle(genPuzzle(false));
+renderScore(); nextDrill(); renderDrillScore(); renderRT();
+})();
+</script>
+</body>
+</html>
